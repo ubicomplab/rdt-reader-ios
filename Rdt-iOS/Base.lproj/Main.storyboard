@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14283.14"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="Rdt_iOS" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Olo-pU-lwp">
+                                <rect key="frame" x="140.5" y="270" width="94" height="30"/>
+                                <state key="normal" title="Image Quality"/>
+                                <connections>
+                                    <segue destination="A82-43-irs" kind="presentation" id="fxy-o3-J5T"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sqo-sg-5jh">
+                                <rect key="frame" x="135" y="328.5" width="105" height="30"/>
+                                <state key="normal" title="Expiration Date"/>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uOH-ZH-LPD">
+                                <rect key="frame" x="159" y="399" width="57" height="30"/>
+                                <state key="normal" title="Settings"/>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="Olo-pU-lwp" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="5cP-cM-IHZ"/>
+                            <constraint firstItem="sqo-sg-5jh" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="GcH-i7-9yO"/>
+                            <constraint firstItem="sqo-sg-5jh" firstAttribute="top" secondItem="Olo-pU-lwp" secondAttribute="bottom" constant="28.5" id="JVR-nt-8rD"/>
+                            <constraint firstItem="sqo-sg-5jh" firstAttribute="centerY" secondItem="6Tk-OE-BBY" secondAttribute="centerY" id="OpH-xO-r1x"/>
+                            <constraint firstItem="uOH-ZH-LPD" firstAttribute="top" secondItem="sqo-sg-5jh" secondAttribute="bottom" constant="40.5" id="R4q-xA-uum"/>
+                            <constraint firstItem="uOH-ZH-LPD" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="sHB-hJ-RTX"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="669.60000000000002" y="25.637181409295355"/>
+        </scene>
+        <!--Image Quality View Con-->
+        <scene sceneID="qiw-t8-7HM">
+            <objects>
+                <viewController id="A82-43-irs" customClass="ImageQualityViewCon" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="1SH-Q2-AZN">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dtD-NJ-Y9Y" customClass="AVCamPreviewView">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="dtD-NJ-Y9Y" firstAttribute="top" secondItem="1SH-Q2-AZN" secondAttribute="top" id="5BQ-zl-P72"/>
+                            <constraint firstItem="dtD-NJ-Y9Y" firstAttribute="trailing" secondItem="fPU-xF-37I" secondAttribute="trailing" id="85V-hk-S13"/>
+                            <constraint firstItem="dtD-NJ-Y9Y" firstAttribute="bottom" secondItem="fPU-xF-37I" secondAttribute="bottom" id="8fe-PQ-P2c"/>
+                            <constraint firstItem="dtD-NJ-Y9Y" firstAttribute="leading" secondItem="fPU-xF-37I" secondAttribute="leading" id="bqe-P0-l7S"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="fPU-xF-37I"/>
+                    </view>
+                    <connections>
+                        <outlet property="previewView" destination="dtD-NJ-Y9Y" id="Xhb-6N-J5W"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="p75-pJ-8PG" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1525.5999999999999" y="25.637181409295355"/>
+        </scene>
+    </scenes>
+</document>
