@@ -36,12 +36,16 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
 
 //@property (nonatomic, retain) CvVideoCamera* videoCamera;
 @property (nonatomic) dispatch_queue_t sessionQueue;
+@property (nonatomic) dispatch_queue_t videoDataOutputQueue;
 @property (nonatomic) AVCaptureSession *session;
 @property (nonatomic, weak) IBOutlet AVCamPreviewView *previewView;
 @property (nonatomic) AVCamSetupResult setupResult;
 @property (nonatomic) AVCaptureDeviceInput *videoDeviceInput;
 @property (nonatomic) AVCapturePhotoOutput *photoOutput;
 @property (nonatomic, getter=isSessionRunning) BOOL sessionRunning;
+@property (nonatomic) AVCaptureVideoDataOutput *videoDataOutput;
+@property (nonatomic) BOOL isProcessing;
+
 
 @end
 
@@ -108,6 +112,7 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
+    self.isProcessing = false;
     X = self.view.frame.size.width;
     Y = self.view.frame.size.height;
     dispatch_async( self.sessionQueue, ^{
@@ -255,20 +260,37 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
     }
     
     // Add photo output.
-    AVCapturePhotoOutput *photoOutput = [[AVCapturePhotoOutput alloc] init];
+//    AVCapturePhotoOutput *photoOutput = [[AVCapturePhotoOutput alloc] init];
+//
+//    if ( [self.session canAddOutput:photoOutput] ) {
+//        [self.session addOutput:photoOutput];
+//        self.photoOutput = photoOutput;
+//        self.photoOutput.highResolutionCaptureEnabled = HIGH_RESOLUTION_ENABLED;
+//        self.photoOutput.livePhotoCaptureEnabled = NO;
+//        self.photoOutput.depthDataDeliveryEnabled = DEPTH_DATA_DELIVERY;
+//    }else {
+//        NSLog( @"Could not add photo output to the session" );
+//        self.setupResult = AVCamSetupResultSessionConfigurationFailed;
+//        [self.session commitConfiguration];
+//        return;
+//    }
     
-    if ( [self.session canAddOutput:photoOutput] ) {
-        [self.session addOutput:photoOutput];
-        self.photoOutput = photoOutput;
-        self.photoOutput.highResolutionCaptureEnabled = HIGH_RESOLUTION_ENABLED;
-        self.photoOutput.livePhotoCaptureEnabled = NO;
-        self.photoOutput.depthDataDeliveryEnabled = DEPTH_DATA_DELIVERY;
-    }else {
-        NSLog( @"Could not add photo output to the session" );
+    // Add frame processor output
+    self.videoDataOutput = [AVCaptureVideoDataOutput new];
+    [self.videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];
+    self.videoDataOutputQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
+    [self.videoDataOutput setSampleBufferDelegate:self queue:self.videoDataOutputQueue];
+
+    
+    if ([self.session canAddOutput:self.videoDataOutput]) {
+        [self.session addOutput:self.videoDataOutput];
+    } else {
+        NSLog(@"Could not add video output to the session");
         self.setupResult = AVCamSetupResultSessionConfigurationFailed;
         [self.session commitConfiguration];
         return;
     }
+    
     [self.session commitConfiguration];
 
 }
@@ -293,6 +315,16 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
     // Pass the selected object to the new view controller.
 }
 */
+#pragma mark - Image Process
+- (void)captureOutput:(AVCaptureOutput *)output
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection{
+    
+    if (!self.isProcessing) {
+    }
+    
+}
+
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator
 {

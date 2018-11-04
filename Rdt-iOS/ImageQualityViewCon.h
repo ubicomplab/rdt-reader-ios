@@ -9,12 +9,12 @@
 #import <UIKit/UIKit.h>
 #import <opencv2/videoio/cap_ios.h>
 #include <opencv2/imgproc/imgproc.hpp>
-
+#include <opencv2/features2d.hpp>
 #include <stdlib.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ImageQualityViewCon : UIViewController
+@interface ImageQualityViewCon : UIViewController<AVCaptureVideoDataOutputSampleBufferDelegate>
 
 @end
 

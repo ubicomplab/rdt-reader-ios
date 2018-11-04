@@ -16,6 +16,7 @@
 		0730AAB32169675D005C8C12 /* Rdt_iOSTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0730AAB22169675D005C8C12 /* Rdt_iOSTests.m */; };
 		0730AABE2169675D005C8C12 /* Rdt_iOSUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0730AABD2169675D005C8C12 /* Rdt_iOSUITests.m */; };
 		0730AACF21696793005C8C12 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0730AACE21696793005C8C12 /* opencv2.framework */; };
+		0760B444218D58C10032C7B6 /* ImageProcessor.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0760B443218D58C10032C7B6 /* ImageProcessor.mm */; };
 		0761DD7B21696C5E00F84CC3 /* ImageQualityViewCon.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0761DD7A21696C5E00F84CC3 /* ImageQualityViewCon.mm */; };
 		0761DD7D2169743100F84CC3 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0761DD7C2169743100F84CC3 /* Accelerate.framework */; };
 		0761DD7F2169743700F84CC3 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0761DD7E2169743700F84CC3 /* AssetsLibrary.framework */; };
@@ -66,6 +67,8 @@
 		0730AABF2169675D005C8C12 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0730AACE21696793005C8C12 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
 		0730AAD2216967F4005C8C12 /* Rdt-iOS-PrefixHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Rdt-iOS-PrefixHeader.h"; sourceTree = "<group>"; };
+		0760B442218D58C10032C7B6 /* ImageProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ImageProcessor.h; sourceTree = "<group>"; };
+		0760B443218D58C10032C7B6 /* ImageProcessor.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ImageProcessor.mm; sourceTree = "<group>"; };
 		0761DD7921696C5E00F84CC3 /* ImageQualityViewCon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ImageQualityViewCon.h; sourceTree = "<group>"; };
 		0761DD7A21696C5E00F84CC3 /* ImageQualityViewCon.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ImageQualityViewCon.mm; sourceTree = "<group>"; };
 		0761DD7C2169743100F84CC3 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -156,6 +159,8 @@
 				0730AAA42169675D005C8C12 /* LaunchScreen.storyboard */,
 				0730AAA72169675D005C8C12 /* Info.plist */,
 				0730AAA82169675D005C8C12 /* main.m */,
+				0760B442218D58C10032C7B6 /* ImageProcessor.h */,
+				0760B443218D58C10032C7B6 /* ImageProcessor.mm */,
 			);
 			path = "Rdt-iOS";
 			sourceTree = "<group>";
@@ -326,6 +331,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0760B444218D58C10032C7B6 /* ImageProcessor.mm in Sources */,
 				0730AA9E2169675C005C8C12 /* ViewController.mm in Sources */,
 				0730AAA92169675D005C8C12 /* main.m in Sources */,
 				0730AA9B2169675C005C8C12 /* AppDelegate.m in Sources */,
