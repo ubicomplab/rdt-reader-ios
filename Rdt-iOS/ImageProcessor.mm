@@ -11,6 +11,7 @@
 
 
 using namespace cv;
+using namespace std;
 
 Ptr<BRISK> detector;
 
@@ -57,6 +58,27 @@ Ptr<BRISK> detector;
 
 
 - (void)performBRISKSearchOnSampleBuffer:(CMSampleBufferRef)sampleBuffer withOrientation:(UIInterfaceOrientation)orientation withCompletion:(ImageProcessorBlock)completion {
+    Mat refMat = [self matFromSampleBuffer:sampleBuffer withOrientation:orientation];
+    [self performSIFTSearchOnMat:refMat withCompletion:^(NSDictionary* features){
+        
+    }];
+}
+
+- (void)performSIFTSearchOnMat:(cv::Mat)referenceMat withCompletion:(ImageProcessorBlock)completion {
+    const float ratio = 0.2; // Make this closer to 1.0 to allow weaker matches, and 0.0 to only allow perfect matches
+    
+    cv::Mat referenceEdgeArray, referenceDescriptors;
+    
+    if (referenceMat.cols < 1 || referenceMat.rows < 1) {
+        return;
+    }
+    
+    // Use BRISK to get keypoints and descriptors for reference image
+    std::vector<KeyPoint> referenceKeypoints;
+    detector->detectAndCompute(referenceMat, noArray(), referenceKeypoints, referenceDescriptors);
+
+
+    
     
 }
 
