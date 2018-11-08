@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		071CCBE02193D11700796106 /* ref.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 071CCBDF2193D11600796106 /* ref.jpg */; };
 		0730AA9B2169675C005C8C12 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0730AA9A2169675C005C8C12 /* AppDelegate.m */; };
 		0730AA9E2169675C005C8C12 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0730AA9D2169675C005C8C12 /* ViewController.mm */; };
 		0730AAA12169675C005C8C12 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0730AA9F2169675C005C8C12 /* Main.storyboard */; };
@@ -49,6 +50,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		071CCBDF2193D11600796106 /* ref.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ref.jpg; sourceTree = "<group>"; };
 		0730AA962169675C005C8C12 /* Rdt-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Rdt-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0730AA992169675C005C8C12 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		0730AA9A2169675C005C8C12 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 				0730AAA82169675D005C8C12 /* main.m */,
 				0760B442218D58C10032C7B6 /* ImageProcessor.h */,
 				0760B443218D58C10032C7B6 /* ImageProcessor.mm */,
+				071CCBDF2193D11600796106 /* ref.jpg */,
 			);
 			path = "Rdt-iOS";
 			sourceTree = "<group>";
@@ -307,6 +310,7 @@
 				0730AAA62169675D005C8C12 /* LaunchScreen.storyboard in Resources */,
 				0730AAA32169675D005C8C12 /* Assets.xcassets in Resources */,
 				0730AAA12169675C005C8C12 /* Main.storyboard in Resources */,
+				071CCBE02193D11700796106 /* ref.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

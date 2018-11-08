@@ -8,6 +8,7 @@
 
 #import "ImageQualityViewCon.h"
 #import "AVCamPreviewView.h"
+#import "ImageProcessor.h"
 
 
 using namespace std;
@@ -54,7 +55,6 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
     // Create the AVCaptureSession.
     self.session = [[AVCaptureSession alloc] init];
     
