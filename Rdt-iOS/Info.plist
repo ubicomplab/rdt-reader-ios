@@ -4,6 +4,8 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Use to take picture of RDT only for healthcare services</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Debugging</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>

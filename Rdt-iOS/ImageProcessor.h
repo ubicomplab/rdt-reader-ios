@@ -15,7 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ImageProcessor : NSObject
 
 + (ImageProcessor *)sharedProcessor;
-typedef void (^ImageProcessorBlock)(NSDictionary* features); // Return hashmap features to client
+typedef void (^ImageProcessorBlock)(bool features); // Return hashmap features to client
 - (void)performBRISKSearchOnSampleBuffer:(CMSampleBufferRef)sampleBuffer withOrientation:(UIInterfaceOrientation)orientation withCompletion:(ImageProcessorBlock)completion;
 @end
 

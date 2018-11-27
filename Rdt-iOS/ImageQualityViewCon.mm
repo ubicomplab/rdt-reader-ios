@@ -17,7 +17,7 @@ using namespace cv;
 AVCaptureSessionPreset GLOBAL_CAMERA_PRESET = AVCaptureSessionPresetPhoto;
 BOOL HIGH_RESOLUTION_ENABLED = NO;
 BOOL DEPTH_DATA_DELIVERY = NO;
-AVCaptureExposureMode EXPOSURE_MODE = AVCaptureExposureModeAutoExpose;
+AVCaptureExposureMode EXPOSURE_MODE = AVCaptureExposureModeContinuousAutoExposure;
 AVCaptureFocusMode FOCUS_MODE = AVCaptureFocusModeContinuousAutoFocus;
 CGFloat X = 0.0;
 CGFloat Y = 0.0;
@@ -170,6 +170,9 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
              Setting (focus/exposure)PointOfInterest alone does not initiate a (focus/exposure) operation.
              Call set(Focus/Exposure)Mode() to apply the new point of interest.
              */
+            if ([device hasTorch] && [device isTorchAvailable]) {
+                [device setTorchMode:AVCaptureTorchModeOn];
+            }
             
             CGPoint focusPoint = CGPointMake(X/2.0, Y/ 2.0);
             if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:FOCUS_MODE] ) {
@@ -184,9 +187,6 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
             
             device.subjectAreaChangeMonitoringEnabled = YES;
             
-            if ([device hasTorch] && [device isTorchAvailable]) {
-                [device setTorchMode:AVCaptureTorchModeOn];
-            }
             [device unlockForConfiguration];
         }
         else {
@@ -206,7 +206,7 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
      We do not create an AVCaptureMovieFileOutput when setting up the session because the
      AVCaptureMovieFileOutput does not support movie recording with AVCaptureSessionPresetPhoto.
      */
-    self.session.sessionPreset = GLOBAL_CAMERA_PRESET;
+    // self.session.sessionPreset = GLOBAL_CAMERA_PRESET;
     
     // Add video input.
     
@@ -279,6 +279,8 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
     self.videoDataOutput = [AVCaptureVideoDataOutput new];
     [self.videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];
     self.videoDataOutputQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
+    self.videoDataOutput.videoSettings = [NSDictionary dictionaryWithObjectsAndKeys: [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA],(id)kCVPixelBufferPixelFormatTypeKey,
+                                          nil];
     [self.videoDataOutput setSampleBufferDelegate:self queue:self.videoDataOutputQueue];
 
     
@@ -321,6 +323,15 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection{
     
     if (!self.isProcessing) {
+        self.isProcessing = true;
+        [[ImageProcessor sharedProcessor] performBRISKSearchOnSampleBuffer:sampleBuffer withOrientation:UIInterfaceOrientationPortrait withCompletion:^(bool features) {
+            self.isProcessing = false;
+            if (features) {
+                NSLog(@"Found!");
+            } else {
+                NSLog(@"Not found!");
+            }
+        }];
     }
     
 }
