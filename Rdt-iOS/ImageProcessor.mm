@@ -7,7 +7,6 @@
 //
 
 #import "ImageProcessor.h"
-#import <opencv2/features2d.hpp>
 #import <opencv2/imgcodecs/ios.h> // For code to convert UIImage to Mat
 #import <opencv2/calib3d/calib3d.hpp> // For calib3d
 #include <iostream>
@@ -20,8 +19,21 @@ float BLUR_THRESHOLD = 0.0;
 float OVER_EXP_THRESHOLD = 255;
 float UNDER_EXP_THRESHOLD = 120;
 float OVER_EXP_WHITE_COUNT = 100;
+cv::Size PREVIEW_SIZE = cv::Size(960, 720);
+double SIZE_THRESHOLD = 0.2;
+double POSITION_THRESHOLD = 0.1;
+double VIEWPORT_SCALE = 0.50;
 int GOOD_MATCH_COUNT = 7;
+double minBlur = FLT_MIN;
+double maxBlur = FLT_MAX; //this value is set to min because blur check is not needed.
 
+
+
+typedef NS_ENUM(NSInteger, ExposureResult ) {
+    UNDER_EXPOSED,
+    NORMAL,
+    OVER_EXPOSED
+};
 
 Ptr<BRISK> detector;
 Ptr<DescriptorMatcher> matcher;
@@ -70,30 +82,7 @@ vector<KeyPoint> refKeypoints;
     
     Mat greyMat;
     cvtColor(mat, greyMat, CV_BGRA2GRAY);
-    
-//    Mat orientedMat;
-//    if (orientation == UIInterfaceOrientationPortrait) {
-//        rotate(mat, orientedMat, cv::ROTATE_90_CLOCKWISE);
-//        mat.release();
-//    } else if (orientation == UIInterfaceOrientationPortraitUpsideDown) {
-//        rotate(mat, orientedMat, cv::ROTATE_90_COUNTERCLOCKWISE);
-//        mat.release();
-//    } else if (orientation == UIInterfaceOrientationLandscapeLeft) {
-//        rotate(mat, orientedMat, cv::ROTATE_180);
-//        mat.release();
-//    } else {
-//        orientedMat = mat;
-//    }
 
-//    cv::Rect rect(0,0,2,2);
-//    Mat submat = mat(rect);
-//    cout << submat << endl;
-//    cout << mat.at<double>(0,1) << endl;
-//    cout << mat.at<double>(0,2) << endl;
-//    cout << mat.at<double>(0,3) << endl;
-//    cout << mat.at<double>(0,4) << endl;
-//    cout << mat.at<double>(0,5) << endl;
-//    cout << mat.at<double>(0,6) << endl;
     mat.release();
     return greyMat;
 }
@@ -101,20 +90,56 @@ vector<KeyPoint> refKeypoints;
 
 - (void)performBRISKSearchOnSampleBuffer:(CMSampleBufferRef)sampleBuffer withOrientation:(UIInterfaceOrientation)orientation withCompletion:(ImageProcessorBlock)completion {
     Mat inputMat = [self matFromSampleBuffer:sampleBuffer withOrientation:orientation];
-    [self performBRISKSearchOnMat:inputMat withCompletion:^(bool features){ // Determine return type
-        completion(features);
-    }];
+    // Check for Exposure and Sharpness here, size and pos are checked after the features are computed
+    // If pass perform BRISK
+    // else completion(false)
+    // [self calculateBlurriness:inputMat];
+    vector<float> histograms = [self calculateHistogram:inputMat]; // This might fail!
+    
+    int maxWhite = 0;
+    float whiteCount = 0;
+    
+    for (int i = 0; i < histograms.size(); i++) {
+        if (histograms[i] > 0) {
+            maxWhite = i;
+        }
+        if (i == histograms.size() - 1) {
+            whiteCount = histograms[i];
+        }
+    }
+    
+    ExposureResult exposureResult;
+    if (maxWhite >= OVER_EXP_THRESHOLD && whiteCount > OVER_EXP_WHITE_COUNT) {
+        exposureResult = OVER_EXPOSED;
+    } else if (maxWhite < UNDER_EXP_THRESHOLD) {
+        exposureResult = UNDER_EXPOSED;
+    } else {
+        exposureResult = NORMAL;
+    }
+    
+    double blurVal = [self calculateBlurriness:inputMat];
+    bool isBlur = blurVal < (maxBlur * BLUR_THRESHOLD);
+    
+    if (exposureResult == NORMAL && !isBlur) {
+        [self performBRISKSearchOnMat:inputMat withCompletion:^(bool passed,UIImage *img, bool updatePos, bool sharpness, bool brightness, bool shadow){ // Determine return type
+            completion(passed, img, updatePos, sharpness, brightness, shadow);
+        }];
+    } else {
+        NSLog(@"Found = ENTERED");
+        completion(false, nil, false, isBlur, !(exposureResult == NORMAL), false);
+    }
+    
+
 }
 
 - (void)performBRISKSearchOnMat:(Mat)inputMat withCompletion:(ImageProcessorBlock)completion {
     Mat inDescriptor;
     vector<KeyPoint> inKeypoints;
-    
+    UIImage *resultImg;
     detector->detectAndCompute(inputMat, noArray(), inKeypoints, inDescriptor);
     if (inDescriptor.cols < 1 || inDescriptor.rows < 1) { // No features found!
         NSLog(@"Found no features!");
-        completion(false);
-        return;
+        completion(false, nil, false, false, false, false);
     }
     NSLog(@"Found %lu keypoints from input image", inKeypoints.size());
     
@@ -160,7 +185,8 @@ vector<KeyPoint> refKeypoints;
 //        std::cout << i << ' ';
     
     vector<Point2f> result;
-    result.push_back(Point2f(0,0));
+    // result.push_back(Point2f(0,0));
+    // Didn't push Point2f(0,0)
     
     bool found = false;
     // HOMOGRAPHY!
@@ -176,8 +202,8 @@ vector<KeyPoint> refKeypoints;
             drawMatches(refImg, refKeypoints, inputMat, inKeypoints, goodMatches, img_matches, Scalar::all(-1),
                         Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
             
-            UIImage *debugImg = MatToUIImage(img_matches);
-            UIImageWriteToSavedPhotosAlbum(debugImg, nil, nil, nil);
+            //UIImage *debugImg = MatToUIImage(img_matches);
+            //UIImageWriteToSavedPhotosAlbum(debugImg, nil, nil, nil);
             
 //            vector<double> a,b,c,d;
 //            a.push_back(0);
@@ -219,7 +245,12 @@ vector<KeyPoint> refKeypoints;
                   sceneCorners.at<Vec2f>(3, 0)[0], sceneCorners.at<Vec2f>(3, 0)[1]);
             
             vector<cv::Point2f> boundary;
-            sceneCorners.convertTo(result, CV_32F); // Not sure! Convert it to vector<point2f>
+            boundary.push_back(Point2f(sceneCorners.at<Vec2f>(0,0)[0], sceneCorners.at<Vec2f>(0,0)[1]));
+            boundary.push_back(Point2f(sceneCorners.at<Vec2f>(1,0)[0], sceneCorners.at<Vec2f>(1,0)[1]));
+            boundary.push_back(Point2f(sceneCorners.at<Vec2f>(2,0)[0], sceneCorners.at<Vec2f>(2,0)[1]));
+            boundary.push_back(Point2f(sceneCorners.at<Vec2f>(3,0)[0], sceneCorners.at<Vec2f>(3,0)[1]));
+            
+            //sceneCorners.convertTo(result, CV_32F); // Not sure! Convert it to vector<point2f>
             
             objCorners.release();
             sceneCorners.release();
@@ -229,13 +260,99 @@ vector<KeyPoint> refKeypoints;
                 minDist = sum / count;
                 //minDistanceUpdated = true;  //What's this?
             }
-            found = true;
+            NSMutableArray * isCorrectPosSize = [self checkPositionAndSize:result isCropped:true];
+            if(isCorrectPosSize[0] && isCorrectPosSize[1] && isCorrectPosSize[2]) {
+                found = true;
+                resultImg = MatToUIImage(inputMat);
+            } else {
+                found = false;
+            }
         }
         H.release();
     }
     // RETURN SOMETHING!
-    completion(found);
+    completion(found, resultImg, !found, false, false, false);
 }
 
+
+-(NSMutableArray *) checkPositionAndSize:(vector<Point2f>) approx isCropped:(bool) cropped {
+    NSMutableArray *result = [[NSMutableArray alloc] init];
+    for (int i = 0; i < 5; i++) {
+        [result addObject:[NSNumber numberWithBool:false]];
+    }
+    if (approx.size() < 1) {
+        return result;
+    }
+    
+    RotatedRect rotatedRect = minAreaRect(approx);
+    if (cropped) {
+        rotatedRect.center = cv::Point(rotatedRect.center.x + PREVIEW_SIZE.width/4, rotatedRect.center.y + PREVIEW_SIZE.height/4);
+    }
+    
+    cv::Point center = rotatedRect.center;
+    cv::Point trueCenter = cv::Point(PREVIEW_SIZE.width/2, PREVIEW_SIZE.height/2);
+    
+    bool isUpright = rotatedRect.size.height > rotatedRect.size.width;
+    double angle = 0;
+    double height = 0;
+
+    if (isUpright) {
+        angle = 90 - abs(rotatedRect.angle);
+        height = rotatedRect.size.height;
+    } else {
+        angle = abs(rotatedRect.angle);
+        height = rotatedRect.size.width;
+    }
+    
+    bool isCentered = center.x < trueCenter.x *(1+ POSITION_THRESHOLD) && center.x > trueCenter.x*(1- POSITION_THRESHOLD)
+    && center.y < trueCenter.y *(1+ POSITION_THRESHOLD) && center.y > trueCenter.y*(1- POSITION_THRESHOLD);
+    bool isRightSize = height < PREVIEW_SIZE.width*VIEWPORT_SCALE*(1+SIZE_THRESHOLD) && height > PREVIEW_SIZE.height*VIEWPORT_SCALE*(1-SIZE_THRESHOLD);
+    bool isOriented = angle < 90.0*POSITION_THRESHOLD;
+
+    result[0] = [NSNumber numberWithBool:isCentered];
+    result[1] = [NSNumber numberWithBool:isRightSize];
+    result[2] = [NSNumber numberWithBool:isOriented];
+    result[3] = [NSNumber numberWithBool:(height > PREVIEW_SIZE.width*VIEWPORT_SCALE*(1+SIZE_THRESHOLD))]; // large
+    result[4] = [NSNumber numberWithBool:(height < PREVIEW_SIZE.height*VIEWPORT_SCALE*(1-SIZE_THRESHOLD))];// small
+    
+    if (((NSNumber*)result[0]).boolValue && ((NSNumber *)result[1]).boolValue ) {
+        NSLog(@"POS: %.2d, %.2d, Angle: %.2f, Height: %.2f", center.x, center.y, angle, height);
+    }
+    
+    return result;
+}
+
+-(double) calculateBlurriness:(Mat) input{
+    Mat des = Mat();
+    Laplacian(input, des, CV_64F);
+    
+    vector<double> median;
+    vector<double> std;
+    
+    meanStdDev(des, median, std);
+    
+    double blurriness = pow(std[0],2);
+    des.release();
+    return blurriness;
+}
+
+
+-(vector<float>) calculateHistogram:(Mat) gray {
+    int mHistSizeNum =256;
+    vector<int> mHistSize;
+    mHistSize.push_back(mHistSizeNum);
+    Mat hist = Mat();
+    vector<float> mBuff;
+    vector<float> histogramRanges;
+    histogramRanges.push_back(0.0);
+    histogramRanges.push_back(256.0);
+    cv::Size sizeRgba = gray.size();
+    vector<int> channel = {0};
+    vector<Mat> allMat = {gray};
+    calcHist(allMat, channel, Mat(), hist, mHistSize, histogramRanges);
+    normalize(hist, hist, sizeRgba.height/2, 0, NORM_INF);
+    mBuff.assign((float*)hist.datastart, (float*)hist.dataend);
+    return mBuff;
+}
 
 @end

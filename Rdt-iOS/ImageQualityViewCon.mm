@@ -19,8 +19,8 @@ BOOL HIGH_RESOLUTION_ENABLED = NO;
 BOOL DEPTH_DATA_DELIVERY = NO;
 AVCaptureExposureMode EXPOSURE_MODE = AVCaptureExposureModeContinuousAutoExposure;
 AVCaptureFocusMode FOCUS_MODE = AVCaptureFocusModeContinuousAutoFocus;
-CGFloat X = 0.0;
-CGFloat Y = 0.0;
+CGFloat X = 0.5;
+CGFloat Y = 0.5;
 
 
 typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
@@ -113,8 +113,6 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
 {
     [super viewWillAppear:animated];
     self.isProcessing = false;
-    X = self.view.frame.size.width;
-    Y = self.view.frame.size.height;
     dispatch_async( self.sessionQueue, ^{
         switch ( self.setupResult )
         {
@@ -170,19 +168,24 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
              Setting (focus/exposure)PointOfInterest alone does not initiate a (focus/exposure) operation.
              Call set(Focus/Exposure)Mode() to apply the new point of interest.
              */
-            if ([device hasTorch] && [device isTorchAvailable]) {
-                [device setTorchMode:AVCaptureTorchModeOn];
-            }
+//            if ([device hasTorch] && [device isTorchAvailable]) {
+//                [device setTorchMode:AVCaptureTorchModeOn];
+//            }
             
-            CGPoint focusPoint = CGPointMake(X/2.0, Y/ 2.0);
+            CGPoint focusPoint = CGPointMake(X, Y);
+            NSLog(@"%f, %f",focusPoint.x,focusPoint.y);
             if (device.isFocusPointOfInterestSupported && [device isFocusModeSupported:FOCUS_MODE] ) {
                 device.focusPointOfInterest = focusPoint;
                 device.focusMode = FOCUS_MODE;
             }
             
-            if ( device.isExposurePointOfInterestSupported && [device isExposureModeSupported:EXPOSURE_MODE] ) {
+            if (device.isExposurePointOfInterestSupported && [device isExposureModeSupported:EXPOSURE_MODE] ) {
                 device.exposurePointOfInterest = focusPoint;
                 device.exposureMode = EXPOSURE_MODE;
+            }
+            
+            if ([device isWhiteBalanceModeSupported:AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance]) {
+                device.whiteBalanceMode = AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance;
             }
             
             device.subjectAreaChangeMonitoringEnabled = YES;
@@ -321,16 +324,16 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
 - (void)captureOutput:(AVCaptureOutput *)output
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection{
-    
     if (!self.isProcessing) {
         self.isProcessing = true;
-        [[ImageProcessor sharedProcessor] performBRISKSearchOnSampleBuffer:sampleBuffer withOrientation:UIInterfaceOrientationPortrait withCompletion:^(bool features) {
+        [[ImageProcessor sharedProcessor] performBRISKSearchOnSampleBuffer:sampleBuffer withOrientation:UIInterfaceOrientationPortrait withCompletion:^(bool passed, UIImage *img, bool updatePos, bool sharpness, bool brightness, bool shadow) {
+            NSLog(@"Found = %d, update Pos = %d, update Sharpness = %d, update Brightness = %d, update Shadow = %d", passed, updatePos, sharpness, brightness, shadow);
             self.isProcessing = false;
-            if (features) {
-                NSLog(@"Found!");
-            } else {
-                NSLog(@"Not found!");
-            }
+//            if (passed) {
+//                NSLog(@"Found!");
+//            } else {
+//                NSLog(@"Not found!");
+//            }
         }];
     }
     

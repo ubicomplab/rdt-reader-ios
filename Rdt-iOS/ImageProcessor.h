@@ -10,12 +10,13 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ImageProcessor : NSObject
 
 + (ImageProcessor *)sharedProcessor;
-typedef void (^ImageProcessorBlock)(bool features); // Return hashmap features to client
+typedef void (^ImageProcessorBlock)(bool passed, UIImage *img, bool updatePos, bool sharpness, bool brightness, bool shadow); // Return hashmap features to client
 - (void)performBRISKSearchOnSampleBuffer:(CMSampleBufferRef)sampleBuffer withOrientation:(UIInterfaceOrientation)orientation withCompletion:(ImageProcessorBlock)completion;
 @end
 
