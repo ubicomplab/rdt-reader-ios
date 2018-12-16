@@ -21,8 +21,14 @@ AVCaptureExposureMode EXPOSURE_MODE = AVCaptureExposureModeContinuousAutoExposur
 AVCaptureFocusMode FOCUS_MODE = AVCaptureFocusModeContinuousAutoFocus;
 CGFloat X = 0.5;
 CGFloat Y = 0.5;
-
-
+NSString *instruction_detected = @"RDT detected at the center!";
+NSString *instruction_pos = @"Place RDT at the center.\nFit RDT to the rectangle.";
+NSString *instruction_too_small = @"Place RDT at the center.\nFit RDT to the rectangle.\nMove closer.";
+NSString *instruction_too_large = @"Place RDT at the center.\nFit RDT to the rectangle.\nMove further away.";
+NSString *instruction_focusing = @"Place RDT at the center.\nFit RDT to the rectangle.\nCamera is focusing. \nStay still.";
+NSString *instruction_unfocused = @"Place RDT at the center.\n Fit RDT to the rectangle.\nCamera is not focused. \nMove further away.";
+int mMoveCloserCount = 0;
+int MOVE_CLOSER_COUNT = 5;
 typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
     AVCamSetupResultSuccess,
     AVCamSetupResultCameraNotAuthorized,
@@ -46,7 +52,11 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
 @property (nonatomic, getter=isSessionRunning) BOOL sessionRunning;
 @property (nonatomic) AVCaptureVideoDataOutput *videoDataOutput;
 @property (nonatomic) BOOL isProcessing;
-
+@property (weak, nonatomic) IBOutlet UILabel *positionLabel;
+@property (weak, nonatomic) IBOutlet UILabel *sharpnessLabel;
+@property (weak, nonatomic) IBOutlet UILabel *brightnessLabel;
+@property (weak, nonatomic) IBOutlet UILabel *shadowLabel;
+@property (weak, nonatomic) IBOutlet UILabel *instructionsLabel;
 
 @end
 
@@ -104,9 +114,40 @@ typedef NS_ENUM( NSInteger, AVCamSetupResult ) {
             break;
         }
     }
-    dispatch_async( self.sessionQueue, ^{
+    dispatch_async(self.sessionQueue, ^{
         [self configureSession];
     } );
+    [self setUpGuidingView];
+    //self.previewView.layer addSublayer:<#(nonnull CALayer *)#>
+    
+}
+
+- (void) setUpGuidingView{
+    double xPos = self.view.frame.size.width * 0.325;
+    double yPos = self.view.frame.size.height * 0.25;
+    double gWidth = self.view.frame.size.width * 0.35;
+    double gHeight = self.view.frame.size.height * 0.5;
+    UIBezierPath *insideBox = [UIBezierPath bezierPathWithRect:CGRectMake(xPos, yPos, gWidth, gHeight)];
+    UIBezierPath *outerBox = [UIBezierPath bezierPathWithRect:self.view.frame];
+    [insideBox appendPath:outerBox];
+    insideBox.usesEvenOddFillRule = YES;
+    
+    CAShapeLayer *fillLayer = [CAShapeLayer layer];
+    fillLayer.path = insideBox.CGPath;
+    fillLayer.fillRule = kCAFillRuleEvenOdd;
+    fillLayer.fillColor = [UIColor redColor].CGColor;
+    fillLayer.opacity = 0.5;
+    fillLayer.strokeColor = [UIColor whiteColor].CGColor;
+    fillLayer.lineWidth = 5.0;
+//    NSLog(@"%@", self.view.layer.sublayers);
+//    NSLog(@"%@", self.previewView.layer);
+//    NSLog(@"%@", self.positionLabel.layer);
+//    NSLog(@"%@", self.sharpnessLabel.layer);
+//    NSLog(@"%@", self.brightnessLabel.layer);
+//    NSLog(@"%@", self.shadowLabel.layer);
+//    NSLog(@"%@", self.instructionsLabel.layer);
+    [self.view.layer insertSublayer:fillLayer above:self.view.layer.sublayers[0]];
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -326,14 +367,42 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection{
     if (!self.isProcessing) {
         self.isProcessing = true;
-        [[ImageProcessor sharedProcessor] performBRISKSearchOnSampleBuffer:sampleBuffer withOrientation:UIInterfaceOrientationPortrait withCompletion:^(bool passed, UIImage *img, bool updatePos, bool sharpness, bool brightness, bool shadow) {
+        [[ImageProcessor sharedProcessor] performBRISKSearchOnSampleBuffer:sampleBuffer withOrientation:UIInterfaceOrientationPortrait withCompletion:^(bool passed, UIImage *img, bool updatePos, bool sharpness, bool brightness, bool shadow, NSMutableArray *isCorrectPosSize) {
             NSLog(@"Found = %d, update Pos = %d, update Sharpness = %d, update Brightness = %d, update Shadow = %d", passed, updatePos, sharpness, brightness, shadow);
-            self.isProcessing = false;
-//            if (passed) {
-//                NSLog(@"Found!");
-//            } else {
-//                NSLog(@"Not found!");
-//            }
+
+            NSString *instructions = instruction_pos;
+            if (isCorrectPosSize != nil) {
+                if (isCorrectPosSize[1] && isCorrectPosSize[0] && isCorrectPosSize[2]) {
+                    instructions = instruction_detected;
+                } else if (mMoveCloserCount > MOVE_CLOSER_COUNT) {
+                    if (!isCorrectPosSize[5]) {
+                        if (!isCorrectPosSize[0] || (!isCorrectPosSize[1] && isCorrectPosSize[3])) {
+                            instructions = instruction_pos;
+                        } else if (!isCorrectPosSize[1] && isCorrectPosSize[4]) {
+                            instructions = instruction_too_small;
+                            mMoveCloserCount = 0;
+                        }
+                    } else {
+                        instructions = instruction_pos;
+                    }
+                } else {
+                    instructions = instruction_too_small;
+                    mMoveCloserCount++;
+                }
+            }
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.positionLabel.text = updatePos ? @"POSITION/SIZE: FAILED": @"POSITION/SIZE: PASSED";
+                self.positionLabel.textColor = updatePos ? [UIColor redColor] : [UIColor greenColor];
+                self.sharpnessLabel.text = sharpness ? @"SHARPNESS: FAILED" : @"SHARPNESS: PASSED";
+                self.sharpnessLabel.textColor = sharpness ? [UIColor redColor] : [UIColor greenColor];
+                self.brightnessLabel.text = brightness ? @"BRIGHTNESS: FAILED" : @"BRIGHTNESS: PASSED";
+                self.brightnessLabel.textColor = brightness ? [UIColor redColor] : [UIColor greenColor];
+                self.shadowLabel.text = shadow ? @"NO SHADOW: FAILED" : @"NO SHADOW: PASSED";
+                self.shadowLabel.textColor = shadow ? [UIColor redColor] : [UIColor greenColor];
+                self.instructionsLabel.text = instructions;
+                self.isProcessing = false;
+            });
         }];
     }
     

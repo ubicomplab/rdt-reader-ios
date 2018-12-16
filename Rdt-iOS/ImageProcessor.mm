@@ -121,12 +121,12 @@ vector<KeyPoint> refKeypoints;
     bool isBlur = blurVal < (maxBlur * BLUR_THRESHOLD);
     
     if (exposureResult == NORMAL && !isBlur) {
-        [self performBRISKSearchOnMat:inputMat withCompletion:^(bool passed,UIImage *img, bool updatePos, bool sharpness, bool brightness, bool shadow){ // Determine return type
-            completion(passed, img, updatePos, sharpness, brightness, shadow);
+        [self performBRISKSearchOnMat:inputMat withCompletion:^(bool passed,UIImage *img, bool updatePos, bool sharpness, bool brightness, bool shadow, NSMutableArray *isCorrectPosSize){ // Determine return type
+            completion(passed, img, updatePos, sharpness, brightness, shadow, isCorrectPosSize);
         }];
     } else {
         NSLog(@"Found = ENTERED");
-        completion(false, nil, false, isBlur, !(exposureResult == NORMAL), false);
+        completion(false, nil, true, isBlur, !(exposureResult == NORMAL), false, nil);
     }
     
 
@@ -139,7 +139,7 @@ vector<KeyPoint> refKeypoints;
     detector->detectAndCompute(inputMat, noArray(), inKeypoints, inDescriptor);
     if (inDescriptor.cols < 1 || inDescriptor.rows < 1) { // No features found!
         NSLog(@"Found no features!");
-        completion(false, nil, false, false, false, false);
+        completion(false, nil, true, false, false, false, nil);
     }
     NSLog(@"Found %lu keypoints from input image", inKeypoints.size());
     
@@ -189,6 +189,7 @@ vector<KeyPoint> refKeypoints;
     // Didn't push Point2f(0,0)
     
     bool found = false;
+    NSMutableArray *posSizeArr  = nil;
     // HOMOGRAPHY!
     NSLog(@"GoodMatches size %lu", goodMatches.size());
     if (goodMatches.size() > GOOD_MATCH_COUNT) {
@@ -263,6 +264,7 @@ vector<KeyPoint> refKeypoints;
             NSMutableArray * isCorrectPosSize = [self checkPositionAndSize:result isCropped:true];
             if(isCorrectPosSize[0] && isCorrectPosSize[1] && isCorrectPosSize[2]) {
                 found = true;
+                posSizeArr = isCorrectPosSize;
                 resultImg = MatToUIImage(inputMat);
             } else {
                 found = false;
@@ -271,7 +273,7 @@ vector<KeyPoint> refKeypoints;
         H.release();
     }
     // RETURN SOMETHING!
-    completion(found, resultImg, !found, false, false, false);
+    completion(found, resultImg, !found, false, false, false, posSizeArr);
 }
 
 
